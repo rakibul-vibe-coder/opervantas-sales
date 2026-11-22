@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
-import { getTodayBusinessDate, getDateRange, type DatePeriod, toBengaliNumber } from '@/lib/business-date'
+import { getTodayBusinessDate, getDateRange, type DatePeriod, toBengaliNumber, formatCleanBusinessDate } from '@/lib/business-date'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
@@ -179,8 +179,8 @@ export default function ExpenseHistoryPage() {
                   <TableCell className="text-right font-bold text-rose-600">
                     {formatCurrency(Number(expense.amount))}
                   </TableCell>
-                  <TableCell className="text-xs text-slate-600 dark:text-slate-400">{toBengaliNumber(expense.expense_date)}</TableCell>
-                  <TableCell className="text-xs font-medium text-slate-700 dark:text-slate-300">{toBengaliNumber(expense.business_date)}</TableCell>
+                  <TableCell className="text-xs text-slate-600 dark:text-slate-400">{formatCleanBusinessDate(expense.expense_date)}</TableCell>
+                  <TableCell className="text-xs font-medium text-slate-700 dark:text-slate-300">{formatCleanBusinessDate(expense.business_date)}</TableCell>
                   <TableCell className="text-xs text-slate-400">{expense.notes || '—'}</TableCell>
                   <TableCell className="text-center">
                     <Button

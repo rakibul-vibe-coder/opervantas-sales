@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
-import { getTodayBusinessDate, getDateRange, type DatePeriod, toBengaliNumber } from '@/lib/business-date'
+import { getTodayBusinessDate, getDateRange, type DatePeriod, toBengaliNumber, formatCleanBusinessDate } from '@/lib/business-date'
 
 const PERIOD_LABELS: Record<DatePeriod | 'all', string> = {
   today: 'আজকের দিন',
@@ -202,7 +202,7 @@ export default function AllSalesHistoryPage() {
                     {formatDateTime(sale.created_at)}
                   </TableCell>
                   <TableCell className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                    {toBengaliNumber(sale.business_date)}
+                    {formatCleanBusinessDate(sale.business_date)}
                   </TableCell>
                   <TableCell className="font-medium text-slate-900 dark:text-slate-100">{sale.salesman_name}</TableCell>
                   <TableCell className="font-semibold text-slate-900 dark:text-slate-100">{sale.model_name}</TableCell>

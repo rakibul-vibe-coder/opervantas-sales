@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table'
 import { MetricCard } from '@/components/dashboard/MetricCard'
 import { formatCurrency } from '@/lib/utils'
-import { toBengaliNumber } from '@/lib/business-date'
+import { toBengaliNumber, formatCleanBusinessDate } from '@/lib/business-date'
 
 const BENGALI_MONTHS = [
   'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
@@ -159,7 +159,7 @@ export default function MonthlyReportsPage() {
             ) : (
               dailyData.map((row: any) => (
                 <TableRow key={row.business_date}>
-                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">{toBengaliNumber(row.business_date)}</TableCell>
+                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">{formatCleanBusinessDate(row.business_date)}</TableCell>
                   <TableCell className="text-center text-slate-700 dark:text-slate-300">{toBengaliNumber(row.total_transactions)}</TableCell>
                   <TableCell className="text-center text-slate-700 dark:text-slate-300">{toBengaliNumber(row.total_quantity)} টি</TableCell>
                   <TableCell className="text-right text-slate-500">

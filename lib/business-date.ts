@@ -69,11 +69,13 @@ export function getTodayBusinessDate(): string {
 }
 
 /**
- * Parse a YYYY-MM-DD date string to a local Date object.
+ * Parse a YYYY-MM-DD or ISO date string to a local Date object safely.
  */
 export function parseBusinessDate(dateString: string): Date {
-  const [year, month, day] = dateString.split('-').map(Number)
-  return new Date(year, month - 1, day)
+  if (!dateString) return new Date()
+  const clean = String(dateString).slice(0, 10)
+  const [year, month, day] = clean.split('-').map(Number)
+  return new Date(year, (month || 1) - 1, day || 1)
 }
 
 /**
@@ -81,12 +83,36 @@ export function parseBusinessDate(dateString: string): Date {
  */
 export function formatDisplayDate(dateString: string): string {
   if (!dateString) return ''
-  const date = parseBusinessDate(dateString)
-  const dayName = BANGLA_DAYS[date.getDay()]
-  const monthName = BANGLA_MONTHS[date.getMonth()]
-  const dayNum = toBengaliNumber(date.getDate())
-  const yearNum = toBengaliNumber(date.getFullYear())
-  return `${dayName}, ${dayNum} ${monthName} ${yearNum}`
+  try {
+    const date = parseBusinessDate(dateString)
+    const dayName = BANGLA_DAYS[date.getDay()]
+    const monthName = BANGLA_MONTHS[date.getMonth()]
+    const dayNum = toBengaliNumber(date.getDate())
+    const yearNum = toBengaliNumber(date.getFullYear())
+    return `${dayName}, ${dayNum} ${monthName} ${yearNum}`
+  } catch {
+    return String(dateString)
+  }
+}
+
+/**
+ * Format a business date cleanly in Bengali numbers (e.g. "২২-১১-২০২৬").
+ * Never displays ISO strings like "২০২৬-১১-২২T০০:০০:০০.০০০Z".
+ */
+export function formatCleanBusinessDate(dateString: string | null | undefined): string {
+  if (!dateString) return ''
+  try {
+    const clean = String(dateString).slice(0, 10)
+    const [year, month, day] = clean.split('-').map(Number)
+    if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) {
+      return String(dateString)
+    }
+    const dayStr = String(day).padStart(2, '0')
+    const monthStr = String(month).padStart(2, '0')
+    return `${toBengaliNumber(dayStr)}-${toBengaliNumber(monthStr)}-${toBengaliNumber(year)}`
+  } catch {
+    return String(dateString)
+  }
 }
 
 /**

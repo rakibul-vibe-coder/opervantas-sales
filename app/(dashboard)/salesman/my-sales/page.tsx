@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
-import { getDateRange, type DatePeriod, toBengaliNumber } from '@/lib/business-date'
+import { getDateRange, type DatePeriod, toBengaliNumber, formatCleanBusinessDate } from '@/lib/business-date'
 
 const PERIOD_LABELS: Record<DatePeriod, string> = {
   today: 'আজকের দিন',
@@ -141,7 +141,7 @@ export default function MySalesPage() {
                   <TableCell className="text-right text-emerald-600 dark:text-emerald-400 font-bold">
                     +{formatCurrency(Number(sale.gross_profit))}
                   </TableCell>
-                  <TableCell className="text-xs text-slate-600 dark:text-slate-400">{toBengaliNumber(sale.business_date)}</TableCell>
+                  <TableCell className="text-xs text-slate-600 dark:text-slate-400">{formatCleanBusinessDate(sale.business_date)}</TableCell>
                   <TableCell className="text-xs text-slate-500">
                     {formatDateTime(sale.created_at)}
                   </TableCell>

@@ -70,8 +70,9 @@ export default function ReportsAndAnalyticsPage() {
   // 1. Daily Sales Trend data (grouped by business_date)
   const salesByDate: Record<string, { date: string; sales: number; profit: number }> = {}
   sales.forEach((s: any) => {
-    const d = s.business_date
-    if (!salesByDate[d]) salesByDate[d] = { date: toBengaliNumber(d.slice(5)), sales: 0, profit: 0 }
+    const rawDate = (s.business_date || '').slice(0, 10)
+    const d = rawDate
+    if (!salesByDate[d]) salesByDate[d] = { date: toBengaliNumber(rawDate.slice(5)), sales: 0, profit: 0 }
     salesByDate[d].sales += Number(s.total_selling_amount || 0)
     salesByDate[d].profit += Number(s.gross_profit || 0)
   })
@@ -89,12 +90,14 @@ export default function ReportsAndAnalyticsPage() {
   // 3. Sales vs Expenses by Date
   const comparisonByDate: Record<string, { date: string; sales: number; expenses: number }> = {}
   sales.forEach((s: any) => {
-    const d = toBengaliNumber(s.business_date.slice(5))
+    const rawDate = (s.business_date || '').slice(0, 10)
+    const d = toBengaliNumber(rawDate.slice(5))
     if (!comparisonByDate[d]) comparisonByDate[d] = { date: d, sales: 0, expenses: 0 }
     comparisonByDate[d].sales += Number(s.total_selling_amount || 0)
   })
   expenses.forEach((e: any) => {
-    const d = toBengaliNumber(e.business_date.slice(5))
+    const rawDate = (e.business_date || '').slice(0, 10)
+    const d = toBengaliNumber(rawDate.slice(5))
     if (!comparisonByDate[d]) comparisonByDate[d] = { date: d, sales: 0, expenses: 0 }
     comparisonByDate[d].expenses += Number(e.amount || 0)
   })
