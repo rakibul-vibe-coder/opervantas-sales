@@ -154,14 +154,6 @@ function LoginForm() {
             )}
           </Button>
         </form>
-
-        <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
-          <p className="font-bold text-slate-900 dark:text-slate-200">ব্যবহারের জন্য ডেমো অ্যাকাউন্ট:</p>
-          <div className="space-y-1 font-mono text-[12px]">
-            <p>• <strong>ম্যানেজার:</strong> <span className="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-bold text-blue-700">admin_manager</span> / <span className="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-bold">manager123</span></p>
-            <p>• <strong>বিক্রয়কর্মী:</strong> <span className="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-bold text-emerald-700">rahim_sales</span> / <span className="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-bold">salesman123</span></p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   )

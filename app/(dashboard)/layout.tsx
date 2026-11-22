@@ -19,7 +19,7 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role, employee_id, status')
+    .select('full_name, role, employee_id, status, avatar_url')
     .eq('id', user.id)
     .single()
 
@@ -27,11 +27,12 @@ export default async function DashboardLayout({
   const role = p?.role || 'salesman'
   const userName = p?.full_name || 'User'
   const employeeId = p?.employee_id || 'EMP-0000'
+  const avatarUrl = p?.avatar_url || null
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col lg:flex-row">
-      <Sidebar role={role} userName={userName} employeeId={employeeId} />
-      <MobileNav role={role} userName={userName} employeeId={employeeId} />
+      <Sidebar role={role} userName={userName} employeeId={employeeId} avatarUrl={avatarUrl} />
+      <MobileNav role={role} userName={userName} employeeId={employeeId} avatarUrl={avatarUrl} />
 
       <main className="flex-1 min-w-0 pt-16 pb-20 lg:pt-0 lg:pb-0 px-4 py-6 md:p-8 max-w-7xl mx-auto w-full">
         {children}

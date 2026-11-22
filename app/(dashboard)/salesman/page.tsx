@@ -20,7 +20,7 @@ export default function SalesmanDashboard() {
       if (!res.ok) throw new Error('Failed to fetch sales')
       return res.json()
     },
-    refetchInterval: 15000,
+    refetchInterval: 10000,
   })
 
   const sales = salesData?.data || []
@@ -48,11 +48,39 @@ export default function SalesmanDashboard() {
           </p>
         </div>
         <Link href="/salesman/add-sale">
-          <Button className="w-full sm:w-auto h-11 bg-blue-700 hover:bg-blue-800 text-white font-semibold gap-2 shadow-sm">
+          <Button className="w-full sm:w-auto h-11 bg-blue-700 hover:bg-blue-800 text-white font-bold gap-2 shadow-sm">
             <PlusCircle className="w-5 h-5" />
             নতুন বিক্রয় এন্ট্রি
           </Button>
         </Link>
+      </div>
+
+      {/* 🌟 PERSISTENT TODAY'S RUNNING TOTAL HIGHLIGHT CARD */}
+      <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white rounded-2xl p-5 sm:p-6 shadow-md border border-blue-500/30">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <span className="text-xs font-bold tracking-wider text-blue-200 uppercase block">
+              আজকের আপনার লাইভ সেলস কাউন্টার
+            </span>
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+              আজকের সর্বমোট বিক্রয় ও লাভ
+            </h2>
+            <p className="text-xs sm:text-sm text-blue-100 font-medium">
+              আজকে আপনি যতগুলো বিক্রি করবেন, সবগুলোর স্বয়ংক্রিয় যোগফল সবসময় এখানে আপডেট থাকবে
+            </p>
+          </div>
+          <div className="flex items-center gap-4 bg-white/15 px-5 py-3 rounded-xl backdrop-blur-sm border border-white/20">
+            <div>
+              <p className="text-xs text-blue-200 font-medium">আজকের মোট বিক্রয়:</p>
+              <p className="text-2xl sm:text-3xl font-black text-white">{formatCurrency(totalSales)}</p>
+              <p className="text-[11px] text-blue-200 mt-0.5">{toBengaliNumber(transactions)} টি বিক্রয়ে {toBengaliNumber(totalQuantity)} টি পণ্য</p>
+            </div>
+            <div className="border-l border-white/30 pl-4">
+              <p className="text-xs text-emerald-200 font-medium">আজকের মোট লাভ:</p>
+              <p className="text-2xl sm:text-3xl font-black text-emerald-300">+{formatCurrency(totalProfit)}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Metric Cards Grid */}
@@ -174,6 +202,21 @@ export default function SalesmanDashboard() {
                   </div>
                 </div>
               ))}
+
+              {/* 🌟 BOTTOM RUNNING TOTAL FOOTER */}
+              <div className="mt-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-semibold text-sm">
+                <span className="text-slate-700 dark:text-slate-300">
+                  আজকের সর্বমোট হিসাব ({toBengaliNumber(transactions)} টি বিক্রয়, {toBengaliNumber(totalQuantity)} টি পণ্য):
+                </span>
+                <div className="flex items-center gap-4">
+                  <span className="text-slate-900 dark:text-slate-100">
+                    মোট বিক্রয়: <strong className="text-blue-700 dark:text-blue-400 text-base">{formatCurrency(totalSales)}</strong>
+                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    মোট লাভ: <strong className="text-base">+{formatCurrency(totalProfit)}</strong>
+                  </span>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>

@@ -49,6 +49,7 @@ const managerMenuItems = [
   { href: '/manager/salesman-management', label: 'বিক্রয়কর্মী ব্যবস্থাপনা', icon: Users },
   { href: '/manager/reports', label: 'রিপোর্ট ও অ্যানালিটিক্স', icon: TrendingUp },
   { href: '/manager/monthly-reports', label: 'মাসিক হিসেব খাতা', icon: FileText },
+  { href: '/manager/profile', label: 'প্রোফাইল ও ছবি', icon: User },
   { href: '/manager/audit-logs', label: 'অডিট ও নিরাপত্তা লগ', icon: ClipboardList },
   { href: '/manager/settings', label: 'সিস্টেম সেটিংস', icon: Settings },
 ]
@@ -58,16 +59,17 @@ const salesmanMenuItems = [
   { href: '/salesman/add-sale', label: 'নতুন বিক্রয় যোগ করুন', icon: PlusCircle },
   { href: '/salesman/my-sales', label: 'আমার বিক্রয় তালিকা', icon: History },
   { href: '/salesman/my-performance', label: 'আমার পারফরম্যান্স', icon: BarChart3 },
-  { href: '/salesman/profile', label: 'প্রোফাইল', icon: User },
+  { href: '/salesman/profile', label: 'প্রোফাইল ও ছবি', icon: User },
 ]
 
 interface MobileNavProps {
   role: 'manager' | 'salesman'
   userName: string
   employeeId: string
+  avatarUrl?: string | null
 }
 
-export function MobileNav({ role, userName, employeeId }: MobileNavProps) {
+export function MobileNav({ role, userName, employeeId, avatarUrl }: MobileNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const bottomNav = role === 'manager' ? managerBottomNav : salesmanBottomNav
@@ -98,29 +100,38 @@ export function MobileNav({ role, userName, employeeId }: MobileNavProps) {
           </div>
           <div>
             <span className="font-bold text-sm text-white block leading-tight">সেলস ম্যানেজার</span>
-            <span className="text-[11px] text-blue-400 font-medium">
-              {role === 'manager' ? 'ম্যানেজার' : 'বিক্রয়কর্মী'}
-            </span>
+            <span className="text-[10px] text-blue-400 font-mono">{employeeId}</span>
           </div>
         </div>
 
+        {/* Menu drawer */}
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800 h-9 w-9">
+            <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800">
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-72 bg-slate-900 text-white border-slate-800 p-0">
-            <div className="flex items-center gap-3 p-5 border-b border-slate-800 bg-slate-900/90">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white text-base">
-                {userName.charAt(0)}
-              </div>
-              <div>
-                <p className="font-semibold text-white leading-tight">{userName}</p>
-                <p className="text-xs text-slate-400 font-mono mt-0.5">{employeeId}</p>
+          <SheetContent side="right" className="w-72 bg-slate-900 border-slate-800 text-white p-0 flex flex-col">
+            <div className="p-4 border-b border-slate-800 flex items-center gap-3">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={userName}
+                  className="w-10 h-10 rounded-full object-cover border border-slate-700 shadow-sm flex-shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white shadow-sm flex-shrink-0">
+                  {userName.charAt(0)}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate">{userName}</p>
+                <p className="text-xs text-blue-400">
+                  {role === 'manager' ? 'স্টোর ম্যানেজার' : 'বিক্রয়কর্মী'}
+                </p>
               </div>
             </div>
-            <nav className="py-3 px-3 space-y-1 overflow-y-auto flex-1">
+            <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
               {menuItems.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.href, item.exact)
@@ -130,7 +141,7 @@ export function MobileNav({ role, userName, employeeId }: MobileNavProps) {
                     href={item.href}
                     onClick={() => setOpen(false)}
                     className={cn(
-                      'flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all',
+                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                       active
                         ? 'bg-blue-600 text-white font-semibold'
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -146,7 +157,7 @@ export function MobileNav({ role, userName, employeeId }: MobileNavProps) {
               <Button
                 variant="outline"
                 onClick={handleSignOut}
-                className="w-full justify-start text-red-300 border-slate-700 bg-slate-800 hover:bg-red-950/40 hover:text-red-200 hover:border-red-900 gap-2 text-xs"
+                className="w-full justify-start text-red-300 border-slate-700 bg-slate-800 hover:bg-red-950/40 hover:text-red-200 hover:border-red-900 gap-2 text-xs font-semibold"
               >
                 <LogOut className="w-4 h-4" />
                 লগআউট করুন

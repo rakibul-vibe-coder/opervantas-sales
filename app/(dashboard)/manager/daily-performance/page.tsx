@@ -126,7 +126,6 @@ export default function DailyPerformancePage() {
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-              <TableHead className="w-16 text-center font-bold">র‍্যাংক</TableHead>
               <TableHead className="font-bold">বিক্রয়কর্মীর নাম</TableHead>
               <TableHead className="font-bold">আইডি (ID)</TableHead>
               <TableHead className="text-center font-bold">ট্রানজেকশন</TableHead>
@@ -141,39 +140,29 @@ export default function DailyPerformancePage() {
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={9} className="h-12 animate-pulse bg-slate-50/50" />
+                  <TableCell colSpan={8} className="h-12 animate-pulse bg-slate-50/50" />
                 </TableRow>
               ))
             ) : sortedList.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-10 text-slate-500 font-medium">
+                <TableCell colSpan={8} className="text-center py-10 text-slate-500 font-medium">
                   এই নির্বাচিত তারিখে কোনো বিক্রয় রেকর্ড পাওয়া যায়নি।
                 </TableCell>
               </TableRow>
             ) : (
-              sortedList.map((row: any, index: number) => {
+              sortedList.map((row: any) => {
                 const salesShare = totalSales > 0 ? ((Number(row.total_sales || 0) / totalSales) * 100).toFixed(1) : '0'
-                const isTop1 = index === 0
 
                 return (
-                  <TableRow key={row.salesman_id} className={isTop1 ? 'bg-amber-50/40 dark:bg-amber-950/20 font-medium' : ''}>
-                    <TableCell className="text-center font-bold">
-                      {isTop1 ? (
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
-                          ১ম 🥇
-                        </span>
-                      ) : (
-                        `#${toBengaliNumber(index + 1)}`
-                      )}
-                    </TableCell>
+                  <TableRow key={row.salesman_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                     <TableCell className="font-bold text-slate-900 dark:text-slate-100">
                       {row.salesman_name}
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-slate-500">
+                    <TableCell className="font-mono text-xs text-blue-700 dark:text-blue-400 font-semibold">
                       {row.employee_id}
                     </TableCell>
                     <TableCell className="text-center font-semibold text-slate-800 dark:text-slate-200">
-                      {toBengaliNumber(row.transactions)}
+                      {toBengaliNumber(row.transactions)} টি
                     </TableCell>
                     <TableCell className="text-center font-semibold text-slate-800 dark:text-slate-200">
                       {toBengaliNumber(row.total_quantity)} টি
@@ -185,7 +174,7 @@ export default function DailyPerformancePage() {
                       {formatCurrency(Number(row.total_sales))}
                     </TableCell>
                     <TableCell className="text-right font-bold text-emerald-600 dark:text-emerald-400">
-                      {formatCurrency(Number(row.gross_profit))}
+                      +{formatCurrency(Number(row.gross_profit))}
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge variant="outline" className="font-semibold text-xs bg-slate-50">
@@ -201,7 +190,6 @@ export default function DailyPerformancePage() {
           {/* COMBINED TOTAL ROW */}
           <TableFooter>
             <TableRow className="bg-slate-100 dark:bg-slate-800 font-bold text-sm border-t-2 border-slate-300 dark:border-slate-700">
-              <TableCell className="text-center text-lg">Σ</TableCell>
               <TableCell colSpan={2} className="text-slate-900 dark:text-slate-100 font-bold">
                 সারাদিনের সম্মিলিত মোট বিক্রয় ও লাভ (TOTAL)
               </TableCell>
@@ -237,12 +225,7 @@ export default function DailyPerformancePage() {
             return (
               <Card key={row.salesman_id} className="p-4 space-y-3 border-slate-200 dark:border-slate-800">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                      #{toBengaliNumber(index + 1)}
-                    </span>
-                    <p className="font-bold text-base text-slate-900 dark:text-slate-100">{row.salesman_name}</p>
-                  </div>
+                  <p className="font-bold text-base text-slate-900 dark:text-slate-100">{row.salesman_name}</p>
                   <Badge variant="outline" className="font-mono text-xs">{row.employee_id}</Badge>
                 </div>
 

@@ -32,6 +32,7 @@ const managerNavItems = [
   { href: '/manager/salesman-management', label: 'বিক্রয়কর্মী ব্যবস্থাপনা', icon: Users },
   { href: '/manager/reports', label: 'রিপোর্ট ও অ্যানালিটিক্স', icon: TrendingUp },
   { href: '/manager/monthly-reports', label: 'মাসিক হিসেব খাতা', icon: FileText },
+  { href: '/manager/profile', label: 'প্রোফাইল ও ছবি', icon: User },
   { href: '/manager/audit-logs', label: 'অডিট ও নিরাপত্তা লগ', icon: ClipboardList },
   { href: '/manager/settings', label: 'সিস্টেম সেটিংস', icon: Settings },
 ]
@@ -41,16 +42,17 @@ const salesmanNavItems = [
   { href: '/salesman/add-sale', label: 'নতুন বিক্রয় যোগ করুন', icon: PlusCircle },
   { href: '/salesman/my-sales', label: 'আমার বিক্রয় তালিকা', icon: History },
   { href: '/salesman/my-performance', label: 'আমার পারফরম্যান্স', icon: BarChart3 },
-  { href: '/salesman/profile', label: 'প্রোফাইল', icon: User },
+  { href: '/salesman/profile', label: 'প্রোফাইল ও ছবি', icon: User },
 ]
 
 interface SidebarProps {
   role: 'manager' | 'salesman'
   userName: string
   employeeId: string
+  avatarUrl?: string | null
 }
 
-export function Sidebar({ role, userName, employeeId }: SidebarProps) {
+export function Sidebar({ role, userName, employeeId, avatarUrl }: SidebarProps) {
   const pathname = usePathname()
   const navItems = role === 'manager' ? managerNavItems : salesmanNavItems
 
@@ -110,9 +112,17 @@ export function Sidebar({ role, userName, employeeId }: SidebarProps) {
       {/* User info + logout */}
       <div className="p-4 border-t border-slate-800 space-y-3 bg-slate-900/50">
         <div className="flex items-center gap-3 px-1">
-          <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm">
-            {userName.charAt(0)}
-          </div>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={userName}
+              className="w-10 h-10 rounded-full object-cover border border-slate-700 shadow-sm flex-shrink-0"
+            />
+          ) : (
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm flex-shrink-0">
+              {userName.charAt(0)}
+            </div>
+          )}
           <div className="min-w-0">
             <p className="text-sm font-semibold truncate text-white">{userName}</p>
             <p className="text-xs text-slate-400 font-mono">{employeeId}</p>
@@ -122,7 +132,7 @@ export function Sidebar({ role, userName, employeeId }: SidebarProps) {
           variant="outline"
           size="sm"
           onClick={handleSignOut}
-          className="w-full justify-start text-red-300 border-slate-700 bg-slate-800 hover:bg-red-950/40 hover:text-red-200 hover:border-red-900 gap-2 h-9 text-xs"
+          className="w-full justify-start text-red-300 border-slate-700 bg-slate-800 hover:bg-red-950/40 hover:text-red-200 hover:border-red-900 gap-2 h-9 text-xs font-semibold"
         >
           <LogOut className="w-3.5 h-3.5" />
           লগআউট করুন

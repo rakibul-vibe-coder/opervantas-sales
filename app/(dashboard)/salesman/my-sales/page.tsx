@@ -6,7 +6,7 @@ import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { getDateRange, type DatePeriod, toBengaliNumber } from '@/lib/business-date'
@@ -47,14 +47,18 @@ export default function MySalesPage() {
   const sales = response?.data || []
   const pagination = response?.pagination || { page: 1, totalPages: 1, total: 0 }
 
+  const pageTotalSales = sales.reduce((sum: number, s: any) => sum + Number(s.total_selling_amount || 0), 0)
+  const pageTotalProfit = sales.reduce((sum: number, s: any) => sum + Number(s.gross_profit || 0), 0)
+  const pageTotalQuantity = sales.reduce((sum: number, s: any) => sum + Number(s.quantity || 0), 0)
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            আমার বিক্রয় ইতিহাস (My Sales)
+            আমার বিক্রয় ইতিহাস ও সর্বমোট হিসাব
           </h1>
-          <p className="text-sm text-slate-500 font-medium">আপনার এন্ট্রি করা সমস্ত বিক্রয় ট্রানজেকশনের খতিয়ান</p>
+          <p className="text-sm text-slate-500 font-medium">আপনার এন্ট্রি করা সমস্ত বিক্রয় ট্রানজেকশনের খতিয়ান ও যোগফল</p>
         </div>
       </div>
 
@@ -145,6 +149,30 @@ export default function MySalesPage() {
               ))
             )}
           </TableBody>
+
+          {/* 🌟 GRAND TOTAL FOOTER */}
+          {sales.length > 0 && (
+            <TableFooter>
+              <TableRow className="bg-slate-100 dark:bg-slate-800 font-bold text-sm border-t-2 border-slate-300 dark:border-slate-700">
+                <TableCell colSpan={2} className="text-slate-900 dark:text-slate-100 font-bold">
+                  নির্বাচিত সময়ের সর্বমোট যোগফল (TOTAL)
+                </TableCell>
+                <TableCell className="text-center text-blue-700 dark:text-blue-400 font-bold">
+                  {toBengaliNumber(pageTotalQuantity)} টি
+                </TableCell>
+                <TableCell className="text-right text-slate-500">—</TableCell>
+                <TableCell className="text-right text-blue-700 dark:text-blue-400 text-base font-black">
+                  {formatCurrency(pageTotalSales)}
+                </TableCell>
+                <TableCell className="text-right text-emerald-600 text-base font-black">
+                  +{formatCurrency(pageTotalProfit)}
+                </TableCell>
+                <TableCell colSpan={2} className="text-slate-500 text-xs text-right">
+                  মোট {toBengaliNumber(sales.length)} টি বিক্রয় রেকর্ড
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </Card>
 
@@ -159,28 +187,50 @@ export default function MySalesPage() {
             কোনো বিক্রয় রেকর্ড পাওয়া যায়নি।
           </div>
         ) : (
-          sales.map((sale: any) => (
-            <Card key={sale.id} className="p-4 space-y-2 border-slate-200 dark:border-slate-800">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-blue-700 dark:text-blue-400 font-bold">{sale.sale_number}</span>
-                <span className="text-xs text-slate-500">{formatDateTime(sale.created_at)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="font-bold text-base text-slate-900 dark:text-slate-100">{sale.model_name}</p>
-                <Badge variant="secondary" className="font-medium">পরিমাণ: {toBengaliNumber(sale.quantity)} টি</Badge>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t text-sm">
-                <div>
-                  <span className="text-xs text-slate-500 font-medium">মোট বিক্রয়: </span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">{formatCurrency(Number(sale.total_selling_amount))}</span>
+          <>
+            {sales.map((sale: any) => (
+              <Card key={sale.id} className="p-4 space-y-2 border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs text-blue-700 dark:text-blue-400 font-bold">{sale.sale_number}</span>
+                  <span className="text-xs text-slate-500">{formatDateTime(sale.created_at)}</span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <p className="font-bold text-base text-slate-900 dark:text-slate-100">{sale.model_name}</p>
+                  <Badge variant="secondary" className="font-medium">পরিমাণ: {toBengaliNumber(sale.quantity)} টি</Badge>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t text-sm">
+                  <div>
+                    <span className="text-xs text-slate-500 font-medium">মোট বিক্রয়: </span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{formatCurrency(Number(sale.total_selling_amount))}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 font-medium">লাভ: </span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(Number(sale.gross_profit))}</span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+
+            {/* Mobile Running Total Banner */}
+            <Card className="p-4 bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-md rounded-2xl">
+              <div className="flex justify-between items-center pb-2 border-b border-white/20">
+                <span className="text-xs font-semibold text-blue-200">নির্বাচিত সময়ের মোট যোগফল:</span>
+                <span className="font-bold text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                  {toBengaliNumber(sales.length)} টি বিক্রয় ({toBengaliNumber(pageTotalQuantity)} টি পণ্য)
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2">
                 <div>
-                  <span className="text-xs text-slate-500 font-medium">লাভ: </span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(Number(sale.gross_profit))}</span>
+                  <p className="text-xs text-blue-200">মোট বিক্রয়</p>
+                  <p className="text-xl font-black">{formatCurrency(pageTotalSales)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-emerald-200">মোট লাভ</p>
+                  <p className="text-xl font-black text-emerald-300">+{formatCurrency(pageTotalProfit)}</p>
                 </div>
               </div>
             </Card>
-          ))
+          </>
         )}
       </div>
 

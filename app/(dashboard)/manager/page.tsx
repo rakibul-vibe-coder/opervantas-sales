@@ -109,8 +109,8 @@ export default function ManagerDashboard() {
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
               ম্যানেজার ড্যাশবোর্ড
             </h1>
-            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 flex items-center gap-1.5 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <Badge className="bg-emerald-600 text-white font-bold flex items-center gap-1.5 px-3 py-1 text-xs shadow-sm border-0">
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
               লাইভ আপডেট
             </Badge>
           </div>
@@ -136,14 +136,14 @@ export default function ManagerDashboard() {
           </Button>
 
           <Link href="/manager/add-sale">
-            <Button size="sm" className="h-10 bg-blue-700 hover:bg-blue-800 text-white gap-1.5 font-medium">
+            <Button size="sm" className="h-10 bg-blue-700 hover:bg-blue-800 text-white gap-1.5 font-bold shadow-sm">
               <PlusCircle className="w-4 h-4" />
               নতুন বিক্রয়
             </Button>
           </Link>
 
           <Link href="/manager/add-expense">
-            <Button size="sm" variant="outline" className="h-10 gap-1.5 border-slate-300 font-medium">
+            <Button size="sm" className="h-10 gap-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-800 font-bold px-3.5 shadow-sm">
               <Wallet className="w-4 h-4 text-rose-600" />
               নতুন খরচ
             </Button>
