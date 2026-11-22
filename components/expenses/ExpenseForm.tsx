@@ -124,8 +124,9 @@ export function ExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
                 id="amount"
                 type="number"
                 placeholder="0"
-                className="h-11"
+                className="h-11 font-semibold"
                 disabled={isPending}
+                onFocus={(e) => e.target.select()}
                 {...register('amount', { valueAsNumber: true })}
               />
               {errors.amount && (

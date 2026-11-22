@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from 'next'
-import { Hind_Siliguri } from 'next/font/google'
+import { Noto_Sans_Bengali } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 
-const font = Hind_Siliguri({
+const font = Noto_Sans_Bengali({
   subsets: ['bengali', 'latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700', '800'],
   display: 'swap',
 })
 

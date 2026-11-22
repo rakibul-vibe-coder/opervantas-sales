@@ -161,8 +161,9 @@ export function SaleEntryForm({ redirectAfterSubmit }: SaleEntryFormProps) {
                 inputMode="numeric"
                 placeholder="1"
                 min={1}
-                className="h-11 text-base"
+                className="h-11 text-base font-semibold"
                 disabled={isPending}
+                onFocus={(e) => e.target.select()}
                 {...register('quantity', { valueAsNumber: true })}
               />
               {errors.quantity && (
@@ -184,8 +185,9 @@ export function SaleEntryForm({ redirectAfterSubmit }: SaleEntryFormProps) {
                   inputMode="decimal"
                   placeholder="0"
                   min={0}
-                  className="h-11 text-base"
+                  className="h-11 text-base font-semibold"
                   disabled={isPending}
+                  onFocus={(e) => e.target.select()}
                   {...register('unit_purchase_price', { valueAsNumber: true })}
                 />
                 {errors.unit_purchase_price && (
@@ -203,8 +205,9 @@ export function SaleEntryForm({ redirectAfterSubmit }: SaleEntryFormProps) {
                   inputMode="decimal"
                   placeholder="0"
                   min={0}
-                  className="h-11 text-base"
+                  className="h-11 text-base font-semibold"
                   disabled={isPending}
+                  onFocus={(e) => e.target.select()}
                   {...register('unit_selling_price', { valueAsNumber: true })}
                 />
                 {errors.unit_selling_price && (

@@ -53,6 +53,30 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
+/* Ensure all form inputs, selects and textareas have 100% visible, high-contrast text in all themes */
+input, select, textarea {
+  color: #0f172a !important;
+  background-color: #ffffff;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.dark input, .dark select, .dark textarea {
+  color: #f8fafc !important;
+  background-color: #0f172a;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+/* Ensure placeholder is visible but distinct */
+input::placeholder, textarea::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+.dark input::placeholder, .dark textarea::placeholder {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
 /* Touch friendly optimizations */
 button, input, select, textarea {
   touch-action: manipulation;

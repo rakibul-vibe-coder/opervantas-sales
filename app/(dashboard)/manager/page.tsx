@@ -100,6 +100,37 @@ export default function ManagerDashboard() {
         </div>
       </div>
 
+      {/* 🌟 CASH IN HAND HIGHLIGHT BANNER */}
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-2xl p-5 sm:p-6 shadow-md border border-emerald-500/30">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="p-2 bg-white/15 rounded-xl backdrop-blur-sm">
+                <Wallet className="w-5 h-5 text-white" />
+              </span>
+              <span className="text-xs sm:text-sm font-bold tracking-wider text-emerald-100 uppercase">
+                আজকের ক্যাশ রেজিস্টার ব্যালেন্স
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight">
+              ক্যাশে থাকা উচিত টাকা (ক্যাশ ইন হ্যান্ড)
+            </h2>
+            <p className="text-xs sm:text-sm text-emerald-50 font-medium">
+              আজকের সকল বিক্রয় থেকে সকল দোকান খরচ বাদ দিয়ে ক্যাশ ড্রয়ারে বর্তমানে অবশিষ্ট টাকা
+            </p>
+          </div>
+          <div className="text-left sm:text-right bg-white/15 px-5 py-3.5 rounded-xl backdrop-blur-sm border border-white/20">
+            <p className="text-xs text-emerald-100 font-semibold">হাতে নগদ থাকা বাধ্যতামূলক:</p>
+            <p className="text-2xl sm:text-4xl font-black text-white tracking-tight mt-1">
+              {formatCurrency(summary.net_cash_in_hand ?? (Number(summary.total_sales || 0) - Number(summary.total_expenses || 0)))}
+            </p>
+            <p className="text-xs text-emerald-100 font-medium mt-1">
+              (মোট বিক্রয়: {formatCurrency(summary.total_sales)} − মোট খরচ: {formatCurrency(summary.total_expenses)})
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* 8 KPI Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {/* 1. Today's Total Sales */}

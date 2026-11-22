@@ -54,13 +54,13 @@ export function MetricCard({
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <p className={cn(
-              'text-muted-foreground font-medium truncate',
+              'text-slate-600 dark:text-slate-300 font-semibold truncate',
               size === 'sm' ? 'text-xs' : 'text-sm'
             )}>
               {title}
             </p>
             <p className={cn(
-              'font-bold text-foreground mt-1 truncate',
+              'font-extrabold text-slate-900 dark:text-slate-50 mt-1 truncate tracking-tight',
               size === 'lg' ? 'text-3xl' : size === 'sm' ? 'text-lg' : 'text-2xl'
             )}>
               {displayValue}

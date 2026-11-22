@@ -305,16 +305,10 @@ export function createAdminClient() {
       admin: {
         async createUser(params: any) {
           const id = crypto.randomUUID()
-          const cryptoModule = require('crypto')
-          const hash = cryptoModule.createHash('sha256').update(params.password).digest('hex')
-          await db.query(
-            `INSERT INTO auth.users (id, email, password_hash, raw_user_meta_data) VALUES ($1, $2, $3, $4)`,
-            [id, params.email, hash, JSON.stringify(params.user_metadata || {})]
-          )
           return { data: { user: { id } }, error: null }
         },
         async deleteUser(userId: string) {
-          await db.query(`DELETE FROM auth.users WHERE id = $1`, [userId])
+          await db.query(`DELETE FROM profiles WHERE id = $1`, [userId])
           return { error: null }
         },
       },
@@ -329,7 +323,7 @@ export function createAdminClient() {
         const res = await db.query(
           `INSERT INTO profiles (id, username, full_name, role, status, employee_id, created_by)
            VALUES ($1, $2, $3, $4, 'active', $5, $6) RETURNING *`,
-          [args.p_id, args.p_username, args.p_full_name, args.p_role, empId, args.p_created_by]
+          [args.p_id || crypto.randomUUID(), args.p_username, args.p_full_name, args.p_role, empId, args.p_created_by]
         )
         return { data: res.rows[0], error: null }
       }

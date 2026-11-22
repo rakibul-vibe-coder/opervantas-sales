@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       const totalProfit = (sales || []).reduce((sum: number, s: any) => sum + Number(s.gross_profit || 0), 0)
       const totalQty = (sales || []).reduce((sum: number, s: any) => sum + Number(s.quantity || 0), 0)
       const totalExp = (expenses || []).reduce((sum: number, e: any) => sum + Number(e.amount || 0), 0)
+      const netCashInHand = totalSales - totalExp
       const activeSalespeople = new Set((sales || []).map((s: any) => s.salesman_id)).size
 
       return NextResponse.json({
@@ -58,6 +59,7 @@ export async function GET(request: NextRequest) {
             total_gross_profit: totalProfit,
             total_expenses: totalExp,
             net_profit: totalProfit - totalExp,
+            net_cash_in_hand: netCashInHand,
             total_quantity: totalQty,
             total_transactions: (sales || []).length,
             active_salespeople: activeSalespeople,
@@ -72,17 +74,25 @@ export async function GET(request: NextRequest) {
     const { data: performance } = await supabase
       .rpc('get_salesman_performance', { p_business_date: businessDate })
 
+    const rawSummary = summary?.[0] || {
+      total_sales: 0,
+      total_purchase_cost: 0,
+      total_gross_profit: 0,
+      total_expenses: 0,
+      net_profit: 0,
+      total_quantity: 0,
+      total_transactions: 0,
+      active_salespeople: 0,
+    }
+    const salesAmount = Number(rawSummary.total_sales || 0)
+    const expensesAmount = Number(rawSummary.total_expenses || 0)
+    const netCashInHand = salesAmount - expensesAmount
+
     return NextResponse.json({
       data: {
-        summary: summary?.[0] || {
-          total_sales: 0,
-          total_purchase_cost: 0,
-          total_gross_profit: 0,
-          total_expenses: 0,
-          net_profit: 0,
-          total_quantity: 0,
-          total_transactions: 0,
-          active_salespeople: 0,
+        summary: {
+          ...rawSummary,
+          net_cash_in_hand: netCashInHand,
         },
         salesman_performance: performance || [],
         business_date: businessDate,
