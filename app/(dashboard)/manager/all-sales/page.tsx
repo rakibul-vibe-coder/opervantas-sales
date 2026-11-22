@@ -1,13 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Search, Download, ChevronLeft, ChevronRight, Printer } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Search, Download, ChevronLeft, ChevronRight, Printer, Trash2, CheckCircle2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { getTodayBusinessDate, getDateRange, type DatePeriod, toBengaliNumber } from '@/lib/business-date'
 
@@ -28,6 +39,8 @@ export default function AllSalesHistoryPage() {
   const [endDate, setEndDate] = useState('')
   const [period, setPeriod] = useState<DatePeriod | 'all'>('today')
   const [page, setPage] = useState(1)
+  const [deleteSale, setDeleteSale] = useState<any | null>(null)
+  const queryClient = useQueryClient()
 
   const activeRange = period !== 'all' && period !== 'custom' ? getDateRange(period) : { start: startDate, end: endDate }
 
@@ -50,6 +63,29 @@ export default function AllSalesHistoryPage() {
   const sales = response?.data || []
   const pagination = response?.pagination || { page: 1, totalPages: 1, total: 0 }
 
+  const { mutate: deleteSaleMutation, isPending: isDeleting } = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/sales/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.message || 'বিক্রয় এন্ট্রি মুছতে সমস্যা হয়েছে')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      toast.success('ভুল বিক্রয় এন্ট্রি সফলভাবে মুছে ফেলা হয়েছে!', {
+        icon: <CheckCircle2 className="w-4 h-4 text-green-500" />,
+      })
+      setDeleteSale(null)
+      queryClient.invalidateQueries({ queryKey: ['manager-sales'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['sales'] })
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'বিক্রয় এন্ট্রি মুছতে ব্যর্থ হয়েছে')
+    },
+  })
+
   const handleExportCSV = () => {
     const params = new URLSearchParams({
       format: 'csv',
@@ -69,10 +105,10 @@ export default function AllSalesHistoryPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            সকল বিক্রয় ইতিহাস (All Sales)
+            সকল বিক্রয় ইতিহাস ও নিয়ন্ত্রণ (All Sales)
           </h1>
           <p className="text-sm text-slate-500 font-medium">
-            দোকানের সমস্ত বিক্রয়কর্মীর সকল বিক্রয় ট্রানজেকশনের সম্পূর্ণ তালিকা
+            দোকানের সমস্ত বিক্রয় রেকর্ড দেখুন এবং ভুল এন্ট্রি হলে এখান থেকে সরাসরি মুছে ফেলুন
           </p>
         </div>
 
@@ -103,8 +139,9 @@ export default function AllSalesHistoryPage() {
               />
             </div>
 
+            {/* Quick Period Filter Buttons */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
-              {(['today', 'yesterday', 'this_week', 'this_month', 'all'] as const).map((p) => (
+              {(['today', 'yesterday', 'this_week', 'this_month', 'all'] as (DatePeriod | 'all')[]).map((p) => (
                 <Button
                   key={p}
                   variant={period === p ? 'default' : 'outline'}
@@ -139,18 +176,19 @@ export default function AllSalesHistoryPage() {
               <TableHead className="text-right font-bold">মোট খরচ</TableHead>
               <TableHead className="text-right font-bold">মোট বিক্রয়</TableHead>
               <TableHead className="text-right font-bold">গ্রস প্রফিট</TableHead>
+              <TableHead className="text-center font-bold">অ্যাকশন</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={11} className="h-12 animate-pulse bg-slate-50/50" />
+                  <TableCell colSpan={12} className="h-12 animate-pulse bg-slate-50/50" />
                 </TableRow>
               ))
             ) : sales.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-center py-10 text-slate-500 font-medium">
+                <TableCell colSpan={12} className="text-center py-10 text-slate-500 font-medium">
                   এই ফিল্টারে কোনো বিক্রয় রেকর্ড পাওয়া যায়নি।
                 </TableCell>
               </TableRow>
@@ -183,6 +221,17 @@ export default function AllSalesHistoryPage() {
                   </TableCell>
                   <TableCell className="text-right font-bold text-emerald-600 dark:text-emerald-400">
                     +{formatCurrency(Number(sale.gross_profit))}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50 h-8 px-2 text-xs gap-1 font-semibold"
+                      onClick={() => setDeleteSale(sale)}
+                      title="ভুল এন্ট্রি মুছুন"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> মুছুন
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -225,6 +274,16 @@ export default function AllSalesHistoryPage() {
                   <strong className="text-emerald-600 dark:text-emerald-400">+{formatCurrency(Number(sale.gross_profit))}</strong>
                 </div>
               </div>
+              <div className="pt-2 border-t flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50 h-7 px-2.5 text-xs gap-1 font-semibold"
+                  onClick={() => setDeleteSale(sale)}
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> ভুল এন্ট্রি মুছুন
+                </Button>
+              </div>
             </Card>
           ))
         )}
@@ -258,6 +317,41 @@ export default function AllSalesHistoryPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteSale} onOpenChange={(open) => !open && setDeleteSale(null)}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" /> ভুল বিক্রয় এন্ট্রি মুছে ফেলা
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-slate-600 dark:text-slate-300 space-y-2">
+              <span>
+                আপনি কি নিশ্চিত যে আপনি ভাউচার <strong>{deleteSale?.sale_number}</strong> ({deleteSale?.model_name})-এর এই বিক্রয় এন্ট্রিটি মুছে ফেলতে চান?
+              </span>
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 rounded-lg text-xs text-red-800 dark:text-red-300 space-y-1 mt-2">
+                <p>• বিক্রয় মূল্য: <strong>{formatCurrency(Number(deleteSale?.total_selling_amount))}</strong></p>
+                <p>• পরিমাণ: <strong>{toBengaliNumber(deleteSale?.quantity || 1)} টি</strong></p>
+                <p className="font-semibold text-red-700 dark:text-red-400 mt-1">
+                  ⚠️ এটি মুছে ফেললে আজকের মোট বিক্রয়, লাভ এবং ক্যাশ ব্যালেন্স থেকে এই হিসাবটি সম্পূর্ণ বাদ হয়ে যাবে।
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={isDeleting} className="font-medium">
+              বাতিল
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteSale && deleteSaleMutation(deleteSale.id)}
+              className="bg-red-600 hover:bg-red-700 text-white font-medium"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'মুছে ফেলা হচ্ছে...' : 'হ্যাঁ, এন্ট্রি মুছুন'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

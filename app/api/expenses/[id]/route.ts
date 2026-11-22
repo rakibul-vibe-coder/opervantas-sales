@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getDb } from '@/lib/db/pg'
 import { expenseUpdateSchema } from '@/lib/validations/expense.schema'
 
 export const dynamic = 'force-dynamic'
@@ -77,19 +78,17 @@ export async function DELETE(
       return NextResponse.json({ message: 'Manager access required' }, { status: 403 })
     }
 
-    // Soft delete
-    const { data: expense, error } = await supabase
-      .from('expenses')
-      .update({ status: 'deleted', updated_by: user.id })
-      .eq('id', id)
-      .select()
-      .single()
+    const db = getDb()
+    const check = await db.query(`SELECT * FROM expenses WHERE id = $1`, [id])
+    if (check.rows.length === 0) {
+      return NextResponse.json({ message: 'খরচের রেকর্ড পাওয়া যায়নি' }, { status: 404 })
+    }
 
-    if (error) throw error
-    if (!expense) return NextResponse.json({ message: 'Expense not found' }, { status: 404 })
+    await db.query(`DELETE FROM expenses WHERE id = $1`, [id])
 
-    return NextResponse.json({ message: 'Expense deleted', data: expense })
-  } catch {
+    return NextResponse.json({ message: 'ভুল খরচের রেকর্ড সফলভাবে মুছে ফেলা হয়েছে', data: check.rows[0] })
+  } catch (error: any) {
+    console.error('DELETE /api/expenses/:id error:', error)
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
   }
 }

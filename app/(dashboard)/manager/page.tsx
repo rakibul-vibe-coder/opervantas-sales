@@ -1,6 +1,7 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import {
   DollarSign,
@@ -15,16 +16,31 @@ import {
   ArrowRight,
   RefreshCw,
   ShoppingBag,
+  Trash2,
+  CheckCircle2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MetricCard } from '@/components/dashboard/MetricCard'
-import { formatCurrency, formatTime } from '@/lib/utils'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
+import { formatCurrency, formatTime, formatDateTime } from '@/lib/utils'
 import { getTodayBusinessDate, formatDisplayDate, toBengaliNumber } from '@/lib/business-date'
 
 export default function ManagerDashboard() {
   const today = getTodayBusinessDate()
+  const [deleteSale, setDeleteSale] = useState<any | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: response, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['dashboard-summary', today],
@@ -34,6 +50,17 @@ export default function ManagerDashboard() {
       return res.json()
     },
     refetchInterval: 10000, // Real-time poll every 10 seconds
+  })
+
+  // Fetch today's recent sales for manager deletion/review
+  const { data: todaySalesData, isLoading: isSalesLoading } = useQuery({
+    queryKey: ['today-recent-sales', today],
+    queryFn: async () => {
+      const res = await fetch(`/api/sales?startDate=${today}&endDate=${today}&pageSize=20`)
+      if (!res.ok) throw new Error('Failed to fetch today sales')
+      return res.json()
+    },
+    refetchInterval: 10000,
   })
 
   const summary = response?.data?.summary || {
@@ -48,6 +75,30 @@ export default function ManagerDashboard() {
   }
 
   const salesmenPerformance = response?.data?.salesman_performance || []
+  const todaySales = todaySalesData?.data || []
+
+  const { mutate: deleteSaleMutation, isPending: isDeleting } = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/sales/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.message || 'বিক্রয় এন্ট্রি মুছতে সমস্যা হয়েছে')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      toast.success('ভুল বিক্রয় এন্ট্রি সফলভাবে মুছে ফেলা হয়েছে!', {
+        icon: <CheckCircle2 className="w-4 h-4 text-green-500" />,
+      })
+      setDeleteSale(null)
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['today-recent-sales'] })
+      queryClient.invalidateQueries({ queryKey: ['manager-sales'] })
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'বিক্রয় এন্ট্রি মুছতে ব্যর্থ হয়েছে')
+    },
+  })
 
   return (
     <div className="space-y-6">
@@ -221,6 +272,84 @@ export default function ManagerDashboard() {
         />
       </div>
 
+      {/* 🌟 TODAY'S SALES & DELETE SECTION (ভুল এন্ট্রি হলে তাৎক্ষণিক মুছুন) */}
+      <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <div>
+            <CardTitle className="text-base md:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5 text-blue-600" />
+              আজকের বিক্রয় তালিকা (ভুল এন্ট্রি হলে ডিলিট করার সুবিধা)
+            </CardTitle>
+            <CardDescription className="text-sm text-slate-500">
+              আজকের সকল বিক্রয় এন্ট্রি লাইভ দেখুন এবং ভুল এন্ট্রি হলে সরাসরি মুছে ফেলুন
+            </CardDescription>
+          </div>
+          <Link href="/manager/all-sales">
+            <Button variant="ghost" size="sm" className="gap-1 text-blue-700 hover:text-blue-800 font-semibold">
+              সকল বিক্রয় ইতিহাস <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </CardHeader>
+        <CardContent>
+          {isSalesLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg" />
+              ))}
+            </div>
+          ) : todaySales.length === 0 ? (
+            <div className="text-center py-8 text-slate-500 font-medium">
+              আজকে এখনো কোনো বিক্রয় রেকর্ড এন্ট্রি করা হয়নি।
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {todaySales.slice(0, 8).map((sale: any) => (
+                <div
+                  key={sale.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-bold text-sm text-slate-900 dark:text-slate-100">{sale.model_name}</p>
+                      <Badge variant="secondary" className="text-xs px-2 py-0 font-medium">
+                        {toBengaliNumber(sale.quantity)} টি
+                      </Badge>
+                      <span className="text-xs font-mono text-blue-700 dark:text-blue-400 font-bold">
+                        {sale.sale_number}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      বিক্রয়কারী: <strong className="text-slate-700 dark:text-slate-300">{sale.salesman_name}</strong> • সময়: {formatDateTime(sale.created_at)}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-4 flex-shrink-0">
+                    <div className="text-right">
+                      <p className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                        {formatCurrency(Number(sale.total_selling_amount))}
+                      </p>
+                      <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        +{formatCurrency(Number(sale.gross_profit))} লাভ
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50 h-8 px-2.5 text-xs gap-1 font-semibold"
+                      onClick={() => setDeleteSale(sale)}
+                      title="ভুল এন্ট্রি মুছুন"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> মুছুন
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Live Salesperson Activity Section */}
       <Card className="shadow-sm border-slate-200 dark:border-slate-800">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -295,6 +424,42 @@ export default function ManagerDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteSale} onOpenChange={(open) => !open && setDeleteSale(null)}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" /> ভুল বিক্রয় এন্ট্রি মুছে ফেলা
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-slate-600 dark:text-slate-300 space-y-2">
+              <span>
+                আপনি কি নিশ্চিত যে আপনি ভাউচার <strong>{deleteSale?.sale_number}</strong> ({deleteSale?.model_name})-এর এই বিক্রয় এন্ট্রিটি মুছে ফেলতে চান?
+              </span>
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 rounded-lg text-xs text-red-800 dark:text-red-300 space-y-1 mt-2">
+                <p>• বিক্রয় মূল্য: <strong>{formatCurrency(Number(deleteSale?.total_selling_amount))}</strong></p>
+                <p>• বিক্রয়কারী: <strong>{deleteSale?.salesman_name}</strong></p>
+                <p>• পরিমাণ: <strong>{toBengaliNumber(deleteSale?.quantity || 1)} টি</strong></p>
+                <p className="font-semibold text-red-700 dark:text-red-400 mt-1">
+                  ⚠️ এটি মুছে ফেললে আজকের মোট বিক্রয়, লাভ এবং ক্যাশ ব্যালেন্স থেকে এই হিসাবটি সম্পূর্ণ বাদ হয়ে যাবে।
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={isDeleting} className="font-medium">
+              বাতিল
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteSale && deleteSaleMutation(deleteSale.id)}
+              className="bg-red-600 hover:bg-red-700 text-white font-medium"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'মুছে ফেলা হচ্ছে...' : 'হ্যাঁ, এন্ট্রি মুছুন'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
