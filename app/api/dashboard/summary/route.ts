@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getTodayBusinessDate } from '@/lib/business-date'
+import { getDb } from '@/lib/db/pg'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,15 @@ export async function GET(request: NextRequest) {
     // Get dashboard summary using the DB function
     const { data: summary, error: summaryError } = await supabase
       .rpc('get_dashboard_summary', { p_business_date: businessDate })
+
+    // Get daily opening cash (if set)
+    const db = getDb()
+    const cashRes = await db.query(
+      `SELECT amount, notes FROM daily_opening_cash WHERE business_date = $1`,
+      [businessDate]
+    )
+    const openingCash = Number(cashRes.rows[0]?.amount || 0)
+    const openingCashNotes = cashRes.rows[0]?.notes || ''
 
     if (summaryError) {
       // Fallback query if stored procedure isn't created yet in local dev
@@ -60,6 +70,8 @@ export async function GET(request: NextRequest) {
             total_expenses: totalExp,
             net_profit: totalProfit - totalExp,
             net_cash_in_hand: netCashInHand,
+            opening_cash: openingCash,
+            opening_cash_notes: openingCashNotes,
             total_quantity: totalQty,
             total_transactions: (sales || []).length,
             active_salespeople: activeSalespeople,
@@ -93,6 +105,8 @@ export async function GET(request: NextRequest) {
         summary: {
           ...rawSummary,
           net_cash_in_hand: netCashInHand,
+          opening_cash: openingCash,
+          opening_cash_notes: openingCashNotes,
         },
         salesman_performance: performance || [],
         business_date: businessDate,

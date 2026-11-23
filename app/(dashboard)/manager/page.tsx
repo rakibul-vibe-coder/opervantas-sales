@@ -18,11 +18,13 @@ import {
   ShoppingBag,
   Trash2,
   CheckCircle2,
+  Coins,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MetricCard } from '@/components/dashboard/MetricCard'
+import { DailyOpeningCashDialog } from '@/components/dashboard/DailyOpeningCashDialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +42,7 @@ import { getTodayBusinessDate, formatDisplayDate, toBengaliNumber } from '@/lib/
 export default function ManagerDashboard() {
   const today = getTodayBusinessDate()
   const [deleteSale, setDeleteSale] = useState<any | null>(null)
+  const [isCashDialogOpen, setIsCashDialogOpen] = useState<boolean>(false)
   const queryClient = useQueryClient()
 
   const { data: response, isLoading, refetch, isRefetching } = useQuery({
@@ -135,6 +138,20 @@ export default function ManagerDashboard() {
             <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
           </Button>
 
+          <Button
+            onClick={() => setIsCashDialogOpen(true)}
+            size="sm"
+            className="h-10 gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3.5 shadow-sm"
+          >
+            <Coins className="w-4 h-4 text-slate-950" />
+            সকালের ক্যাশ
+            {Number(summary.opening_cash || 0) > 0 && (
+              <span className="ml-1 bg-black/15 text-slate-950 px-2 py-0.5 rounded-full text-xs font-black">
+                {formatCurrency(summary.opening_cash)}
+              </span>
+            )}
+          </Button>
+
           <Link href="/manager/add-sale">
             <Button size="sm" className="h-10 bg-blue-700 hover:bg-blue-800 text-white gap-1.5 font-bold shadow-sm">
               <PlusCircle className="w-4 h-4" />
@@ -153,8 +170,8 @@ export default function ManagerDashboard() {
 
       {/* 🌟 CASH IN HAND HIGHLIGHT BANNER */}
       <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-2xl p-5 sm:p-6 shadow-md border border-emerald-500/30">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-1.5 max-w-xl">
             <div className="flex items-center gap-2">
               <span className="p-2 bg-white/15 rounded-xl backdrop-blur-sm">
                 <Wallet className="w-5 h-5 text-white" />
@@ -170,16 +187,52 @@ export default function ManagerDashboard() {
               আজকের সকল বিক্রয় থেকে সকল দোকান খরচ বাদ দিয়ে ক্যাশ ড্রয়ারে বর্তমানে অবশিষ্ট টাকা
             </p>
           </div>
-          <div className="text-left sm:text-right bg-white/15 px-5 py-3.5 rounded-xl backdrop-blur-sm border border-white/20">
-            <p className="text-xs text-emerald-100 font-semibold">হাতে নগদ থাকা বাধ্যতামূলক:</p>
-            <p className="text-2xl sm:text-4xl font-black text-white tracking-tight mt-1">
-              {formatCurrency(summary.net_cash_in_hand ?? (Number(summary.total_sales || 0) - Number(summary.total_expenses || 0)))}
-            </p>
-            <p className="text-xs text-emerald-100 font-medium mt-1">
-              (মোট বিক্রয়: {formatCurrency(summary.total_sales)} − মোট খরচ: {formatCurrency(summary.total_expenses)})
-            </p>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Opening Cash Box */}
+            <div className="bg-white/15 px-4 py-3 rounded-xl backdrop-blur-sm border border-white/20 flex flex-col justify-between">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-amber-200 font-bold flex items-center gap-1">
+                  <Coins className="w-3.5 h-3.5" /> সকালের প্রারম্ভিক ক্যাশ:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsCashDialogOpen(true)}
+                  className="text-[11px] underline text-white hover:text-amber-200 font-bold"
+                >
+                  {Number(summary.opening_cash || 0) > 0 ? 'পরিবর্তন' : '+ এন্ট্রি দিন'}
+                </button>
+              </div>
+              <p className="text-xl sm:text-2xl font-black text-amber-300 mt-1">
+                {Number(summary.opening_cash || 0) > 0 ? formatCurrency(summary.opening_cash) : '৳০'}
+              </p>
+              <p className="text-[10px] text-emerald-100/90 font-medium">
+                (ব্যবসায়িক লাভ-ক্ষতিতে যুক্ত নয়)
+              </p>
+            </div>
+
+            {/* Net Sales Cash Box */}
+            <div className="bg-white/20 px-5 py-3 rounded-xl backdrop-blur-sm border border-white/30 text-left sm:text-right">
+              <p className="text-xs text-emerald-100 font-semibold">আজকের নিট ক্যাশ (বিক্রয় − খরচ):</p>
+              <p className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
+                {formatCurrency(summary.net_cash_in_hand ?? (Number(summary.total_sales || 0) - Number(summary.total_expenses || 0)))}
+              </p>
+              <p className="text-xs text-emerald-100 font-medium mt-0.5">
+                (বিক্রয়: {formatCurrency(summary.total_sales)} − খরচ: {formatCurrency(summary.total_expenses)})
+              </p>
+            </div>
           </div>
         </div>
+
+        {/* Total Drawer Cash Indicator when Opening Cash exists */}
+        {Number(summary.opening_cash || 0) > 0 && (
+          <div className="mt-4 pt-3 border-t border-white/20 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-emerald-100 gap-2">
+            <span className="flex items-center gap-1.5 font-medium">
+              💡 ক্যাশ ড্রয়ারে সর্বমোট নগদ টাকা থাকার কথা: <strong className="text-white text-sm font-bold">{formatCurrency(Number(summary.opening_cash || 0) + Number(summary.net_cash_in_hand || 0))}</strong>
+              <span className="text-[11px] opacity-85">(সকালের ক্যাশ {formatCurrency(summary.opening_cash)} + আজকের নিট ক্যাশ {formatCurrency(summary.net_cash_in_hand)})</span>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* 8 KPI Cards Grid */}
@@ -460,6 +513,18 @@ export default function ManagerDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 🌟 DAILY OPENING CASH MODAL */}
+      <DailyOpeningCashDialog
+        open={isCashDialogOpen}
+        onOpenChange={setIsCashDialogOpen}
+        currentAmount={Number(summary.opening_cash || 0)}
+        currentNotes={summary.opening_cash_notes || ''}
+        businessDate={today}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })
+        }}
+      />
     </div>
   )
 }
