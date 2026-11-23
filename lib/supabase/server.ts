@@ -135,16 +135,91 @@ export async function createClient() {
                 for (const row of rowsToInsert) {
                   const r = { ...row }
                   if (table === 'sales' && !r.sale_number) {
-                    const countRes = await db.query(`SELECT count(*) FROM sales`)
-                    const num = parseInt((countRes.rows[0] as any)?.count || '0') + 1
-                    const d = (r.business_date || new Date().toISOString().slice(0, 10)).replace(/-/g, '')
-                    r.sale_number = `SL-${d}-${String(num).padStart(4, '0')}`
+                    const cleanDate = (r.business_date ? String(r.business_date).slice(0, 10) : new Date().toISOString().slice(0, 10)).replace(/-/g, '')
+                    const prefix = `SL-${cleanDate}-`
+                    const existingRes = await db.query(
+                      `SELECT sale_number FROM sales WHERE sale_number LIKE $1`,
+                      [`${prefix}%`]
+                    )
+                    let maxNum = 0
+                    for (const existingRow of existingRes.rows) {
+                      const numPart = (existingRow.sale_number || '').replace(prefix, '')
+                      const parsed = parseInt(numPart, 10)
+                      if (!isNaN(parsed) && parsed > maxNum) {
+                        maxNum = parsed
+                      }
+                    }
+                    let nextNum = maxNum + 1
+
+                    let insertSuccess = false
+                    let lastInsertErr: any = null
+                    for (let attempt = 0; attempt < 10; attempt++) {
+                      try {
+                        r.sale_number = `${prefix}${String(nextNum + attempt).padStart(4, '0')}`
+                        const cols = Object.keys(r)
+                        const vals = cols.map(c => r[c])
+                        const placeholders = cols.map((_, i) => `$${i + 1}`).join(', ')
+                        const sql = `INSERT INTO sales (${cols.join(', ')}) VALUES (${placeholders}) RETURNING *`
+                        const res = await db.query(sql, vals)
+                        inserted.push(res.rows[0])
+                        insertSuccess = true
+                        break
+                      } catch (insertErr: any) {
+                        lastInsertErr = insertErr
+                        if (insertErr.code === '23505' && (insertErr.detail?.includes('sale_number') || insertErr.message?.includes('sale_number') || insertErr.detail?.includes('sales_sale_number_key'))) {
+                          continue
+                        }
+                        throw insertErr
+                      }
+                    }
+                    if (!insertSuccess) {
+                      throw lastInsertErr || new Error('Failed to generate unique sale_number after 10 attempts')
+                    }
+                    continue
                   }
+
                   if (table === 'expenses' && !r.expense_number) {
-                    const countRes = await db.query(`SELECT count(*) FROM expenses`)
-                    const num = parseInt((countRes.rows[0] as any)?.count || '0') + 1
-                    const d = (r.business_date || new Date().toISOString().slice(0, 10)).replace(/-/g, '')
-                    r.expense_number = `EX-${d}-${String(num).padStart(4, '0')}`
+                    const cleanDate = (r.business_date ? String(r.business_date).slice(0, 10) : new Date().toISOString().slice(0, 10)).replace(/-/g, '')
+                    const prefix = `EX-${cleanDate}-`
+                    const existingRes = await db.query(
+                      `SELECT expense_number FROM expenses WHERE expense_number LIKE $1`,
+                      [`${prefix}%`]
+                    )
+                    let maxNum = 0
+                    for (const existingRow of existingRes.rows) {
+                      const numPart = (existingRow.expense_number || '').replace(prefix, '')
+                      const parsed = parseInt(numPart, 10)
+                      if (!isNaN(parsed) && parsed > maxNum) {
+                        maxNum = parsed
+                      }
+                    }
+                    let nextNum = maxNum + 1
+
+                    let insertSuccess = false
+                    let lastInsertErr: any = null
+                    for (let attempt = 0; attempt < 10; attempt++) {
+                      try {
+                        r.expense_number = `${prefix}${String(nextNum + attempt).padStart(4, '0')}`
+                        const cols = Object.keys(r)
+                        const vals = cols.map(c => r[c])
+                        const placeholders = cols.map((_, i) => `$${i + 1}`).join(', ')
+                        const sql = `INSERT INTO expenses (${cols.join(', ')}) VALUES (${placeholders}) RETURNING *`
+                        const res = await db.query(sql, vals)
+                        inserted.push(res.rows[0])
+                        insertSuccess = true
+                        break
+                      } catch (insertErr: any) {
+                        lastInsertErr = insertErr
+                        if (insertErr.code === '23505' && (insertErr.detail?.includes('expense_number') || insertErr.message?.includes('expense_number') || insertErr.detail?.includes('expenses_expense_number_key'))) {
+                          continue
+                        }
+                        throw insertErr
+                      }
+                    }
+                    if (!insertSuccess) {
+                      throw lastInsertErr || new Error('Failed to generate unique expense_number after 10 attempts')
+                    }
+                    continue
                   }
 
                   const cols = Object.keys(r)

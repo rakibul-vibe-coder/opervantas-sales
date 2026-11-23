@@ -57,8 +57,9 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil((count || 0) / pageSize),
       },
     })
-  } catch {
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
+  } catch (error: any) {
+    console.error('POST /api/expenses error:', error)
+    return NextResponse.json({ message: error?.message || 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -115,7 +116,8 @@ export async function POST(request: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ data: expense }, { status: 201 })
-  } catch {
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
+  } catch (error: any) {
+    console.error('POST /api/expenses error:', error)
+    return NextResponse.json({ message: error?.message || 'Internal server error' }, { status: 500 })
   }
 }

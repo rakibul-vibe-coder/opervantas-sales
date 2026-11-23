@@ -149,8 +149,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ data: sale }, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('POST /api/sales error:', error)
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ message: error?.message || 'Internal server error' }, { status: 500 })
   }
 }
